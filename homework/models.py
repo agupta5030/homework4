@@ -13,16 +13,31 @@ class MLPPlanner(nn.Module):
         self,
         n_track: int = 10,
         n_waypoints: int = 3,
+        hidden_size: int = 256,
     ):
         """
         Args:
             n_track (int): number of points in each side of the track
             n_waypoints (int): number of waypoints to predict
+            hidden_size (int): size of hidden layers
         """
         super().__init__()
 
         self.n_track = n_track
         self.n_waypoints = n_waypoints
+
+        input_size = 2 * n_track * 2
+        output_size = n_waypoints * 2
+
+        self.network = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, hidden_size // 2),
+            nn.ReLU(),
+            nn.Linear(hidden_size // 2, output_size),
+        )
 
     def forward(
         self,
@@ -43,7 +58,14 @@ class MLPPlanner(nn.Module):
         Returns:
             torch.Tensor: future waypoints with shape (b, n_waypoints, 2)
         """
-        raise NotImplementedError
+        batch_size = track_left.shape[0]
+
+        x = torch.cat([track_left, track_right], dim=1)
+        x = x.view(batch_size, -1)
+        x = self.network(x)
+        waypoints = x.view(batch_size, self.n_waypoints, 2)
+
+        return waypoints
 
 
 class TransformerPlanner(nn.Module):
