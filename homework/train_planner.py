@@ -72,7 +72,7 @@ def train(
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=5, verbose=True
+        optimizer, mode="min", factor=0.5, patience=5
     )
 
     log_dir = log_dir / f"{model_name}_{datetime.now().strftime('%m%d_%H%M%S')}"
